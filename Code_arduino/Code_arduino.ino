@@ -2,13 +2,33 @@
 
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);           // select the pins used on the LCD panel
 
+typedef enum {
+  IdleT,
+  CountH,
+  CountD
+}TIME_STATE;
+
+typedef enum {
+  IdleC,
+  ActiveC
+}CLICK_STATE;
+
+typedef enum {
+  IdleW,
+  ChoiceW
+}WEATHER_STATE;
+
+TIME_STATE TimeCurrentState;
+CLICK_STATE ClickCurrentState;
+WEATHER_STATE WeatherCurrentState;
+
 // define some values used by the panel and buttons
 int lcd_key     = 0;
 int adc_key_in  = 0;
 
 #define btnRIGHT  0
-#define btnUP     1
-#define btnDOWN   2
+#define btnUP_Increase     1
+#define btnDOWN_Decrease   2
 #define btnLEFT   3
 #define btnSELECT 4
 #define btnNONE   5
@@ -21,8 +41,8 @@ int read_LCD_buttons(){               // read the buttons
 
     // For V1.1 us this threshold
     if (adc_key_in < 50)   return btnRIGHT;  
-    if (adc_key_in < 250)  return btnUP; 
-    if (adc_key_in < 450)  return btnDOWN; 
+    if (adc_key_in < 250)  return btnUP_Increase; 
+    if (adc_key_in < 450)  return btnDOWN_Decrease; 
     if (adc_key_in < 650)  return btnLEFT; 
     if (adc_key_in < 850)  return btnSELECT;  
 
@@ -40,8 +60,6 @@ void setup(){
 void loop(){
    //lcd.setCursor(12,1);             // move cursor to second line "1" and 9 spaces over
    //lcd.print(millis()/1000);       // display seconds elapsed since power-up
-
-   Serial.println("test");
 
    lcd.setCursor(0,1);             // move to the begining of the second line
    lcd_key = read_LCD_buttons();   // read the buttons
@@ -65,7 +83,8 @@ void loop(){
              break;
        }
        case btnSELECT:{
-             lcd.print("THUNDERSTORM");  //  push button "SELECT" and show the word on the screen
+             lcd.print("Communication");  //  push button "SELECT" and show the word on the screen
+             Serial.println("je communique !");
              break;
        }
    }
