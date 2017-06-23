@@ -10,7 +10,8 @@ typedef enum {
 
 typedef enum {
   IdleC,
-  ActiveC
+  IncreaseC,
+  DecreaseC
 }CLICK_STATE;
 
 typedef enum {
@@ -25,6 +26,10 @@ WEATHER_STATE WeatherCurrentState;
 // define some values used by the panel and buttons
 int lcd_key     = 0;
 int adc_key_in  = 0;
+int Click;
+int StartTime;
+int Heure;
+int timer;
 
 #define btnRIGHT  0
 #define btnUP_Increase     1
@@ -48,6 +53,47 @@ int read_LCD_buttons(){               // read the buttons
 
 
     return btnNONE;                // when all others fail, return this.
+}
+
+void ClickInit(){
+  Click = 1;
+  ClickCurrentState = IdleC;
+}
+
+void ClickUpdate(){
+  switch (ClickCurrentState){
+    case IdleC:
+      if(BtnUP_Increase){
+        startTime = millis();
+        if(Click < 3){
+          Click ++;
+        }
+        ClickCurrentState = IncreaseC;
+      }
+      if(BtnDOWN_Decrease){
+        startTime = millis();
+        if(Click > 1){
+          Click --;
+        }
+        ClickCurrentState = DecreaseC;
+      }
+      break;
+    case IncreaseC:
+      if(btnNONE && ((millis() - startTime) > 100)){
+        ClickCurrentState = IdleC;
+      }
+      break;
+    case DecreaseC:
+      if((btnNONE && ((millis() - startTime) > 100)){
+        ClickCurrentState = IdleC;
+      }
+      break;
+  }
+}
+
+void TimeInit(){
+  Heure = 0;
+  timer = millis() + (30000 / Click)
 }
 
 void setup(){
@@ -74,11 +120,11 @@ void loop(){
              lcd.print("SUNNY       "); //  push button "LEFT" and show the word on the screen
              break;
        }    
-       case btnUP:{
+       case btnUP_Increase:{
              lcd.print("RAINY       ");  //  push button "UP" and show the word on the screen
              break;
        }
-       case btnDOWN:{
+       case btnDOWN_Decrease:{
              lcd.print("HEATWAVE    ");  //  push button "DOWN" and show the word on the screen
              break;
        }
