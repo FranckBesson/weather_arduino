@@ -63,15 +63,15 @@ void ClickInit(){
 void ClickUpdate(){
   switch (ClickCurrentState){
     case IdleC:
-      if(BtnUP_Increase){
-        startTime = millis();
+      if(btnUP_Increase){
+        StartTime = millis();
         if(Click < 3){
           Click ++;
         }
         ClickCurrentState = IncreaseC;
       }
-      if(BtnDOWN_Decrease){
-        startTime = millis();
+      if(btnDOWN_Decrease){
+        StartTime = millis();
         if(Click > 1){
           Click --;
         }
@@ -79,12 +79,12 @@ void ClickUpdate(){
       }
       break;
     case IncreaseC:
-      if(btnNONE && ((millis() - startTime) > 100)){
+      if(btnNONE && ((millis() - StartTime) > 100)){
         ClickCurrentState = IdleC;
       }
       break;
     case DecreaseC:
-      if((btnNONE && ((millis() - startTime) > 100)){
+      if((btnNONE) && ((millis() - StartTime) > 100)){
         ClickCurrentState = IdleC;
       }
       break;
@@ -93,7 +93,8 @@ void ClickUpdate(){
 
 void TimeInit(){
   Heure = 0;
-  timer = millis() + (30000 / Click)
+  timer = millis() + (30000 / Click);
+  TimeCurrentState = IdleT;
 }
 
 void setup(){
@@ -113,24 +114,24 @@ void loop(){
    switch (lcd_key){               // depending on which button was pushed, we perform an action
 
        case btnRIGHT:{             //  push button "RIGHT" and show the word on the screen
-            lcd.print("CLOUDY      ");
+            lcd.print("CLOUDY       ");
             break;
        }
        case btnLEFT:{
-             lcd.print("SUNNY       "); //  push button "LEFT" and show the word on the screen
+             lcd.print("SUNNY        "); //  push button "LEFT" and show the word on the screen
              break;
        }    
        case btnUP_Increase:{
-             lcd.print("RAINY       ");  //  push button "UP" and show the word on the screen
+             lcd.print("RAINY        ");  //  push button "UP" and show the word on the screen
              break;
        }
        case btnDOWN_Decrease:{
-             lcd.print("HEATWAVE    ");  //  push button "DOWN" and show the word on the screen
+             lcd.print("HEATWAVE     ");  //  push button "DOWN" and show the word on the screen
              break;
        }
        case btnSELECT:{
              lcd.print("Communication");  //  push button "SELECT" and show the word on the screen
-             Serial.println("je communique !");
+             Serial.println("163");
              break;
        }
    }
