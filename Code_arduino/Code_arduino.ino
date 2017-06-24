@@ -4,8 +4,7 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);           // select the pins used on the LC
 
 typedef enum {
   IdleT,
-  CountH,
-  CountD
+  CountT
 }TIME_STATE;
 
 typedef enum {
@@ -93,8 +92,23 @@ void ClickUpdate(){
 
 void TimeInit(){
   Heure = 0;
-  timer = millis() + (30000 / Click);
+  timer = millis() + (3000 / Click);
   TimeCurrentState = IdleT;
+}
+
+void TimeUpdate(){
+  switch (TimeCurrentState){
+    case IdleT:
+      if(timer <= millis()){
+        Heure ++;
+        TimeCurrentState = CountT;
+      }
+      break;
+    case CountT:
+      timer = millis() + (3000 / Click);
+      Serial.println(Heure);
+      TimeCurrentState = IdleT;
+  }
 }
 
 void setup(){
@@ -102,13 +116,15 @@ void setup(){
    lcd.begin(16, 2);               // start the library
    lcd.setCursor(0,0);             // set the LCD cursor   position 
    lcd.print("Choice weather ?");  // print a simple message on the LCD
+   ClickInit();
+   TimeInit();
 }
  
 void loop(){
    //lcd.setCursor(12,1);             // move cursor to second line "1" and 9 spaces over
    //lcd.print(millis()/1000);       // display seconds elapsed since power-up
 
-   lcd.setCursor(0,1);             // move to the begining of the second line
+   /*lcd.setCursor(0,1);             // move to the begining of the second line
    lcd_key = read_LCD_buttons();   // read the buttons
 
    switch (lcd_key){               // depending on which button was pushed, we perform an action
@@ -134,5 +150,8 @@ void loop(){
              Serial.println("163");
              break;
        }
-   }
+   }*/
+
+   TimeUpdate();
+   ClickUpdate();
 }
