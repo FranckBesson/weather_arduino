@@ -21,6 +21,9 @@ typedef enum {
 TIME_STATE TimeCurrentState;
 CLICK_STATE ClickCurrentState;
 WEATHER_STATE WeatherCurrentState;
+TIME_STATE TimeNextState;
+CLICK_STATE ClickNextState;
+WEATHER_STATE WeatherNextState;
 
 // define some values used by the panel and buttons
 int lcd_key     = 0;
@@ -28,7 +31,15 @@ int adc_key_in  = 0;
 int Click;
 int StartTime;
 int Heure;
-int timer;
+int Current;
+int Forecast;
+unsigned long Timer;
+int CurrentWeather;
+int ForecastWeather;
+int PlusMoins;
+int boucle;
+
+
 
 #define btnRIGHT  0
 #define btnUP_Increase     1
@@ -60,30 +71,35 @@ void ClickInit(){
 }
 
 void ClickUpdate(){
+  lcd_key = read_LCD_buttons();
   switch (ClickCurrentState){
     case IdleC:
-      if(btnUP_Increase){
+      if(lcd_key == btnUP_Increase){
         StartTime = millis();
-        if(Click < 3){
+        if(Click < 5){
           Click ++;
-        }
+          lcd.setCursor(5, 0);
+          lcd.print(Click);
+      }
         ClickCurrentState = IncreaseC;
       }
-      if(btnDOWN_Decrease){
+      if(lcd_key == btnDOWN_Decrease){
         StartTime = millis();
         if(Click > 1){
           Click --;
+          lcd.setCursor(5, 0);
+          lcd.print(Click);
         }
         ClickCurrentState = DecreaseC;
       }
       break;
     case IncreaseC:
-      if(btnNONE && ((millis() - StartTime) > 100)){
+      if((lcd_key == btnNONE) && ((millis() - StartTime) > 100)){
         ClickCurrentState = IdleC;
       }
       break;
     case DecreaseC:
-      if((btnNONE) && ((millis() - StartTime) > 100)){
+      if((lcd_key == btnNONE) && ((millis() - StartTime) > 100)){
         ClickCurrentState = IdleC;
       }
       break;
@@ -92,32 +108,153 @@ void ClickUpdate(){
 
 void TimeInit(){
   Heure = 0;
-  timer = millis() + (3000 / Click);
+  Timer = millis() + (30000 / Click);
   TimeCurrentState = IdleT;
 }
 
 void TimeUpdate(){
   switch (TimeCurrentState){
     case IdleT:
-      if(timer <= millis()){
+      if(Timer <= millis()){
         Heure ++;
+        boucle = 0;
         TimeCurrentState = CountT;
       }
       break;
     case CountT:
-      timer = millis() + (3000 / Click);
-      Serial.println(Heure);
+      Timer = millis() + (30000 / Click);
+      lcd.setCursor(0, 1);
+      lcd.print(Heure);
+      Serial.print("@");
+      Serial.print(Heure);
+      Serial.print(",");
+      switch(CurrentWeather){
+        case (0):
+          Serial.print("rainy");
+          break;
+        case(1):
+          Serial.print("cloudy");
+          break;
+        case(2):
+          Serial.print("sunny");
+          break;
+        case(3):
+          Serial.print("heatwave");
+          break;
+        case(4):
+          Serial.print("thunderstorm");
+          break;
+      }
+      Serial.print(",");
+      switch(ForecastWeather){
+        case (0):
+          Serial.print("rainy");
+          break;
+        case(1):
+          Serial.print("cloudy");
+          break;
+        case(2):
+          Serial.print("sunny");
+          break;
+        case(3):
+          Serial.print("heatwave");
+          break;
+        case(4):
+          Serial.print("thunderstorm");
+          break;
+      }
+      Serial.println("#");
       TimeCurrentState = IdleT;
   }
 }
 
+void WeatherInit(){
+  boucle = 1;
+  WeatherCurrentState = IdleW;
+}
+
+void WeatherUpdate(){
+  switch(WeatherCurrentState){
+    case IdleW:
+      if (Heure%24 == 0 && boucle == 0){
+        Current = random(1,101);
+        Forecast = random(1,101);
+        Serial.print(Current);
+        Serial.print(",");
+        Serial.println(Forecast);
+        CurrentWeather = ForecastWeather;
+        WeatherNextState = ChoiceW;
+        boucle = 1;
+      }
+      break;
+    case ChoiceW:
+      WeatherNextState = IdleW;
+  }
+  WeatherCurrentState = WeatherNextState;
+}
+
+void WeatherOutput(){
+  if (WeatherCurrentState == ChoiceW){
+    if (Current >= 89 && Current <= 98){
+    PlusMoins = random(1,3);
+    if (PlusMoins == 1){
+      CurrentWeather ++;
+      if (CurrentWeather == 5){
+        CurrentWeather = 0;
+      }
+    }else {
+      CurrentWeather --;
+      if (CurrentWeather == -1){
+        CurrentWeather = 4;
+      }
+    }
+    }
+    if (Current == 99 || Current == 100){
+      PlusMoins = random(1,3);
+      if (PlusMoins == 1){
+        CurrentWeather += 2;
+        if (CurrentWeather == 5){
+          CurrentWeather = 0;
+        }
+        if (CurrentWeather == 6){
+          CurrentWeather = 1;
+        }
+      }else {
+        CurrentWeather -= 2;
+        if (CurrentWeather == -1){
+          CurrentWeather = 4;
+        }
+        if (CurrentWeather == -2){
+          CurrentWeather = 3;
+        }
+      }
+    }
+    if (Forecast >= 1 && Forecast <= 15){
+      ForecastWeather = 0;
+    }
+    if (Forecast >= 16 && Forecast <= 35){
+      ForecastWeather = 1;
+    }
+    if (Forecast >= 36 && Forecast <= 75){
+      ForecastWeather = 2;
+    }
+    if (Forecast >= 76 && Forecast <= 95){
+      ForecastWeather = 3;
+    }
+    if (Forecast >= 96 && Forecast <= 100){
+      ForecastWeather = 4;
+    }
+  }
+  
+}
+
 void setup(){
   Serial.begin(9600);
-   lcd.begin(16, 2);               // start the library
-   lcd.setCursor(0,0);             // set the LCD cursor   position 
-   lcd.print("Choice weather ?");  // print a simple message on the LCD
+   lcd.begin(16, 2);
    ClickInit();
    TimeInit();
+   WeatherInit();
+   randomSeed(analogRead(0));
 }
  
 void loop(){
@@ -151,7 +288,12 @@ void loop(){
              break;
        }
    }*/
-
+   lcd.setCursor(0, 0);
+   lcd.print(Heure/24);
+   lcd.setCursor(10, 1);
+   lcd.print(millis()/((30000 / Click) / 60));
    TimeUpdate();
+   WeatherUpdate();
    ClickUpdate();
+   WeatherOutput();
 }
