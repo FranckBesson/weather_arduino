@@ -48,21 +48,18 @@ int boucle;
 #define btnSELECT 4
 #define btnNONE   5
 
-int read_LCD_buttons(){               // read the buttons
-    adc_key_in = analogRead(0);       // read the value from the sensor 
-
-
+int read_LCD_buttons(){
+    adc_key_in = analogRead(0);
+    
     if (adc_key_in > 1000) return btnNONE; 
 
-    // For V1.1 us this threshold
     if (adc_key_in < 50)   return btnRIGHT;  
     if (adc_key_in < 250)  return btnUP_Increase; 
     if (adc_key_in < 450)  return btnDOWN_Decrease; 
     if (adc_key_in < 650)  return btnLEFT; 
     if (adc_key_in < 850)  return btnSELECT;  
 
-
-    return btnNONE;                // when all others fail, return this.
+    return btnNONE;                
 }
 
 void ClickInit(){
@@ -131,6 +128,7 @@ void TimeUpdate(){
       switch(CurrentWeather){
         case (0):
           Serial.print("rainy");
+          
           break;
         case(1):
           Serial.print("cloudy");
@@ -170,6 +168,8 @@ void TimeUpdate(){
 
 void WeatherInit(){
   boucle = 1;
+  Current = random(1,101);
+  Forecast = random(1,101);
   WeatherCurrentState = IdleW;
 }
 
@@ -179,9 +179,6 @@ void WeatherUpdate(){
       if (Heure%24 == 0 && boucle == 0){
         Current = random(1,101);
         Forecast = random(1,101);
-        Serial.print(Current);
-        Serial.print(",");
-        Serial.println(Forecast);
         CurrentWeather = ForecastWeather;
         WeatherNextState = ChoiceW;
         boucle = 1;
@@ -258,36 +255,6 @@ void setup(){
 }
  
 void loop(){
-   //lcd.setCursor(12,1);             // move cursor to second line "1" and 9 spaces over
-   //lcd.print(millis()/1000);       // display seconds elapsed since power-up
-
-   /*lcd.setCursor(0,1);             // move to the begining of the second line
-   lcd_key = read_LCD_buttons();   // read the buttons
-
-   switch (lcd_key){               // depending on which button was pushed, we perform an action
-
-       case btnRIGHT:{             //  push button "RIGHT" and show the word on the screen
-            lcd.print("CLOUDY       ");
-            break;
-       }
-       case btnLEFT:{
-             lcd.print("SUNNY        "); //  push button "LEFT" and show the word on the screen
-             break;
-       }    
-       case btnUP_Increase:{
-             lcd.print("RAINY        ");  //  push button "UP" and show the word on the screen
-             break;
-       }
-       case btnDOWN_Decrease:{
-             lcd.print("HEATWAVE     ");  //  push button "DOWN" and show the word on the screen
-             break;
-       }
-       case btnSELECT:{
-             lcd.print("Communication");  //  push button "SELECT" and show the word on the screen
-             Serial.println("163");
-             break;
-       }
-   }*/
    lcd.setCursor(0, 0);
    lcd.print(Heure/24);
    lcd.setCursor(10, 1);
