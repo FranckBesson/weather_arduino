@@ -10,7 +10,8 @@ typedef enum {
 typedef enum {
   IdleC,
   IncreaseC,
-  DecreaseC
+  DecreaseC,
+  StopC,
 }CLICK_STATE;
 
 typedef enum {
@@ -45,7 +46,7 @@ int boucle;
 #define btnUP_Increase     1
 #define btnDOWN_Decrease   2
 #define btnLEFT   3
-#define btnSELECT 4
+#define btnSTOP   4
 #define btnNONE   5
 
 int read_LCD_buttons(){
@@ -57,13 +58,15 @@ int read_LCD_buttons(){
     if (adc_key_in < 250)  return btnUP_Increase; 
     if (adc_key_in < 450)  return btnDOWN_Decrease; 
     if (adc_key_in < 650)  return btnLEFT; 
-    if (adc_key_in < 850)  return btnSELECT;  
+    if (adc_key_in < 850)  return btnSTOP;  
 
     return btnNONE;                
 }
 
 void ClickInit(){
   Click = 1;
+  lcd.setCursor(5, 0);
+  lcd.print(Click / 10);
   ClickCurrentState = IdleC;
 }
 
@@ -73,21 +76,34 @@ void ClickUpdate(){
     case IdleC:
       if(lcd_key == btnUP_Increase){
         StartTime = millis();
-        if(Click < 5){
-          Click ++;
+        if(Click < 10){
+          Click += 9;
           lcd.setCursor(5, 0);
-          lcd.print(Click);
-      }
+          lcd.print(Click / 10);
+        } else if (Click < 50){
+          Click += 10;
+          lcd.setCursor(5, 0);
+          lcd.print(Click / 10);
+        }
         ClickCurrentState = IncreaseC;
       }
       if(lcd_key == btnDOWN_Decrease){
         StartTime = millis();
-        if(Click > 1){
-          Click --;
+        if(Click > 10){
+          Click -= 10;
           lcd.setCursor(5, 0);
-          lcd.print(Click);
+          lcd.print(Click / 10);
+        }else if(Click > 1){
+          Click -= 9;
+          lcd.setCursor(5, 0);
+          lcd.print(Click / 10);
         }
         ClickCurrentState = DecreaseC;
+      }
+      if(lcd_key == btnSTOP){
+        StartTime = millis();
+        Serial.println("!");
+        ClickCurrentState = StopC;
       }
       break;
     case IncreaseC:
@@ -100,12 +116,18 @@ void ClickUpdate(){
         ClickCurrentState = IdleC;
       }
       break;
+    case StopC:
+      if((lcd_key == btnNONE) && ((millis() - StartTime) > 100)){
+        ClickCurrentState = IdleC;
+      }
   }
 }
 
 void TimeInit(){
   Heure = 0;
-  Timer = millis() + (30000 / Click);
+  Timer = millis() + (30000 / (1 * Click));
+  lcd.setCursor(0, 1);
+  lcd.print(Heure);
   TimeCurrentState = IdleT;
 }
 
@@ -119,7 +141,7 @@ void TimeUpdate(){
       }
       break;
     case CountT:
-      Timer = millis() + (30000 / Click);
+      Timer = millis() + (30000 / (1 * Click));
       lcd.setCursor(0, 1);
       lcd.print(Heure);
       Serial.print("@");
@@ -258,7 +280,6 @@ void loop(){
    lcd.setCursor(0, 0);
    lcd.print(Heure/24);
    lcd.setCursor(10, 1);
-   lcd.print(millis()/((30000 / Click) / 60));
    TimeUpdate();
    WeatherUpdate();
    ClickUpdate();
